@@ -62,9 +62,7 @@ class MainActivity : AppCompatActivity() {
         binding.dessertButton.setImageResource(currentDessert.imageId)
     }
 
-    /**
-     * Updates the score when the dessert is clicked. Possibly shows a new dessert.
-     */
+   
     private fun onDessertClicked() {
 
         // Update the score
