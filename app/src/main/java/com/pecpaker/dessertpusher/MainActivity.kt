@@ -3,27 +3,30 @@ package com.pecpaker.dessertpusher
 import android.content.ActivityNotFoundException
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.core.app.ShareCompat
 import androidx.databinding.DataBindingUtil
 import com.pecpaker.dessertpusher.databinding.ActivityMainBinding
+import com.pecpaker.dessertpusher.ui.DessertTimer
+import timber.log.Timber
+
+const val KEY_REVENUE = "Key_revenue"
+const val KEY_AMOUNTSOLD = "dessertSold"
+const val KEY_DESSERTTIMER = "dessertTimer"
+
 
 class MainActivity : AppCompatActivity() {
     private var revenue = 0
     private var dessertsSold = 0
+    private lateinit var dessertTimer: DessertTimer
 
     // Contains all the views
     private lateinit var binding: ActivityMainBinding
 
     /** Dessert Data **/
-
-    /**
-     * Simple data class that represents a dessert. Includes the resource id integer associated with
-     * the image, the price it's sold for, and the startProductionAmount, which determines when
-     * the dessert starts to be produced.
-     */
     data class Dessert(val imageId: Int, val price: Int, val startProductionAmount: Int)
 
     // Create a list of all desserts, in order of when they start being produced
@@ -43,9 +46,11 @@ class MainActivity : AppCompatActivity() {
         Dessert(R.drawable.oreo, 6000, 20000)
     )
     private var currentDessert = allDesserts[0]
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        Log.i("MainActivity", "onCreate is called")
 
         // Use Data Binding to get reference to the views
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
@@ -54,6 +59,11 @@ class MainActivity : AppCompatActivity() {
             onDessertClicked()
         }
 
+        dessertTimer = DessertTimer(this.lifecycle)
+
+        if (savedInstanceState != null) {
+            revenue = savedInstanceState.getInt(KEY_REVENUE)
+        }
         // Set the TextViews to the right values
         binding.revenue = revenue
         binding.amountSold = dessertsSold
@@ -62,7 +72,10 @@ class MainActivity : AppCompatActivity() {
         binding.dessertButton.setImageResource(currentDessert.imageId)
     }
 
-   
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+    }
+
     private fun onDessertClicked() {
 
         // Update the score
@@ -91,7 +104,6 @@ class MainActivity : AppCompatActivity() {
             // than the amount sold.
             else break
         }
-
         // If the new dessert is actually different than the current dessert, update the image
         if (newDessert != currentDessert) {
             currentDessert = newDessert
@@ -127,6 +139,25 @@ class MainActivity : AppCompatActivity() {
             R.id.shareMenuButton -> onShare()
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putInt(KEY_REVENUE, revenue)
+        outState.putInt(KEY_AMOUNTSOLD, dessertsSold)
+//        outState.putInt(KEY_DESSERTTIMER)
+        super.onSaveInstanceState(outState)
+        Timber.i("onSaveInstanceState called")
+    }
+
+    override fun onStart() {
+        super.onStart()
+        dessertTimer.startTimer()
+        Timber.i("onStart called")
+    }
+
+    override fun onStop() {
+        dessertTimer.stopTimer()
+        super.onStop()
     }
 
 }
